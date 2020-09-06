@@ -1,0 +1,8 @@
+<NotepadPlus>
+    <Project name="plaid">
+        <File name="linker.ld" />
+        <File name="Makefile" />
+        <File name="plaid.S" />
+        <File name="uart.S" />
+    </Project>
+</NotepadPlus>
