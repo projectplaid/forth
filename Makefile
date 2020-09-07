@@ -1,6 +1,6 @@
 .PHONY: all clean run
 
-ASMSRCS = plaid.S uart.S
+ASMSRCS = boot.S plaid.S uart.S
 ASMOBJS = $(ASMSRCS:.S=.o)
 
 CFLAGS=-mcpu=cortex-a53 -g -O0 -fpic -ffreestanding -std=gnu99 
