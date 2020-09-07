@@ -185,8 +185,8 @@ defcode "DUP",,DUP
 // SWAP ( a b -- b a )
 // Exchange the top two stack items. 
 defcode "SWAP",,SWAP
-	POPDSP	r0
 	POPDSP	r1
+	POPDSP	r0
 	PUSHDSP	r0
 	PUSHDSP r1
 	NEXT
@@ -235,10 +235,10 @@ defcode "2OVER",,TWOOVER
 // 2SWAP ( a b c d -- c d a b ) 
 // Exchange the top two cell pairs.
 defcode "2SWAP",,TWOSWAP
-	POPDSP	r0
-	POPDSP	r1
-	POPDSP	r2
 	POPDSP	r3
+	POPDSP	r2
+	POPDSP	r1
+	POPDSP	r0
 	PUSHDSP	r1
 	PUSHDSP r0
 	PUSHDSP r3
@@ -248,16 +248,16 @@ defcode "2SWAP",,TWOSWAP
 // NIP ( a b -- b )
 // Drop the first item below the top of stack. 
 defcode "NIP",,NIP
-	POPDSP	r0
 	POPDSP	r1
+	POPDSP	r0
 	PUSHDSP	r0
 	NEXT
 
 // TUCK ( a b -- b a b )
 // Copy the first (top) stack item below the second stack item. 
 defcode "TUCK",,TUCK
-	POPDSP 	r0
-	POPDSP	r1
+	POPDSP 	r1
+	POPDSP	r0
 	PUSHDSP r0
 	PUSHDSP r1
 	PUSHDSP r0
@@ -299,8 +299,8 @@ defcode "1-",,DECR
 // + ( x y -- x+y )
 // Add y to x, giving the sum y+x.
 defcode "+",,ADD
-	POPDSP	r0
 	POPDSP	r1
+	POPDSP	r0
 	add 	r0, r0, r1
 	PUSHDSP	r0
 	NEXT
@@ -308,9 +308,60 @@ defcode "+",,ADD
 // - ( x y -- x-y )
 // Subtract y from x, giving the difference y-x.
 defcode "-",,SUB
-	POPDSP	r0
 	POPDSP	r1
+	POPDSP	r0
 	sub		r0, r1, r0
+	PUSHDSP	r0
+	NEXT
+
+// * ( x y -- x*y )
+// Multiply x  by y giving the product x*y.
+defcode "*",,MUL
+	POPDSP	r1
+	POPDSP	r0
+	mul 	r2, r1, r0
+	PUSHDSP	r2
+	NEXT
+
+_DIVMOD:
+	mov		r3, r1
+
+	cmp		r3, r0, LSR #1
+1:	movls	r3, r3, LSL #1
+	cmp		r3, r0, LSR #1
+	bls		1b
+
+	mov 	r2, #0
+2:	cmp 	r0, r3
+	subcs	r0, r0, r3
+	adc 	r2, r2, r3
+	mov 	r3, r3, LSR #1
+	cmp		r3, r1
+	bhs		2b
+
+	bx		lr
+
+// / ( x y -- x/y )
+// Divide x by y, giving the single-cell quotient x/y. An ambiguous condition 
+// exists if y is zero. If x and y differ in sign, the implementation-defined 
+// result returned will be the same as that returned by either the phrase 
+// >R S>D R> FM/MOD SWAP DROP or the phrase >R S>D R> SM/REM SWAP DROP.
+defcode "/",,DIV
+	POPDSP	r1
+	POPDSP	r0
+	bl		_DIVMOD
+	PUSHDSP	r2
+	NEXT
+
+// MOD ( x y -- x/y )
+// Divide x by y, giving the single-cell remainder x/y. An ambiguous condition 
+// exists if y is zero. If x and y differ in sign, the implementation-defined 
+// result returned will be the same as that returned by either the phrase 
+// >R S>D R> FM/MOD DROP or the phrase >R S>D R> SM/REM DROP.  
+defcode	"MOD",,MOD
+	POPDSP	r1
+	POPDSP	r0
+	bl		_DIVMOD
 	PUSHDSP	r0
 	NEXT
 
