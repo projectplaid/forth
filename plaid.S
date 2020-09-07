@@ -165,18 +165,25 @@ defcode "EXIT",,EXIT
 	POPRSP	FIP
 	NEXT
 
-// DROP ( a -- ) drop the top element of the stack
+// FORTH 2012 Standard 
+
+// CORE words
+
+// DROP ( a -- )
+// Remove a from the stack. 
 defcode "DROP",,DROP
 	add		DSP, DSP, #4
 	NEXT
 
-// DUP ( a -- a a ) duplicates the top element
+// DUP ( a -- a a )
+// Duplicate a. 
 defcode "DUP",,DUP
 	ldr		r0, [DSP]
 	PUSHDSP r0
 	NEXT
 
-// SWAP ( a b -- b a ) swap the top two elements
+// SWAP ( a b -- b a )
+// Exchange the top two stack items. 
 defcode "SWAP",,SWAP
 	POPDSP	r0
 	POPDSP	r1
@@ -184,13 +191,15 @@ defcode "SWAP",,SWAP
 	PUSHDSP r1
 	NEXT
 
-// OVER ( a b -- a b a ) push copy of second element to top
+// OVER ( a b -- a b a )
+// Place a copy of a on top of the stack
 defcode "OVER",,OVER
 	ldr		r0, [DSP, #4]
 	PUSHDSP	r0
 	NEXT
 
-// ROT ( a b c -- c a b ) rotate the top three stack entries
+// ROT ( a b c -- c a b )
+// Rotate the top three stack entries. 
 defcode "ROT",,ROT
 	POPDSP	r1
 	POPDSP	r2
@@ -200,15 +209,148 @@ defcode "ROT",,ROT
 	PUSHDSP r0
 	NEXT
 
-// 2DROP ( a b -- ) drop the top two elements on the stack
-defcode "2DROP",,2DROP
+// 2DROP ( a b -- )
+// Drop cell pair a b from the stack. 
+defcode "2DROP",,TWODROP
 	add		DSP, DSP, #8
 	NEXT
 
-// 2DUP ( a b -- a b a b ) duplicate the top two stack elements
-defcode "2DUP",,2DUP
+// 2DUP ( a b -- a b a b )
+// Duplicate cell pair a b.
+defcode "2DUP",,TWODUP
 	ldmia	DSP, {r0,r1}
 	PUSHDSP	r1
+	PUSHDSP	r0
+	NEXT
+
+// 2OVER ( a b c d -- a b c d a b ) 
+// Copy cell pair a b to the top of the stack. 
+defcode "2OVER",,TWOOVER
+	ldr		r0, [DSP, #8]
+	ldr		r1, [DSP, #12]
+	PUSHDSP	r1
+	PUSHDSP r0
+	NEXT
+
+// 2SWAP ( a b c d -- c d a b ) 
+// Exchange the top two cell pairs.
+defcode "2SWAP",,TWOSWAP
+	POPDSP	r0
+	POPDSP	r1
+	POPDSP	r2
+	POPDSP	r3
+	PUSHDSP	r1
+	PUSHDSP r0
+	PUSHDSP r3
+	PUSHDSP r2
+	NEXT
+
+// NIP ( a b -- b )
+// Drop the first item below the top of stack. 
+defcode "NIP",,NIP
+	POPDSP	r0
+	POPDSP	r1
+	PUSHDSP	r0
+	NEXT
+
+// TUCK ( a b -- b a b )
+// Copy the first (top) stack item below the second stack item. 
+defcode "TUCK",,TUCK
+	POPDSP 	r0
+	POPDSP	r1
+	PUSHDSP r0
+	PUSHDSP r1
+	PUSHDSP r0
+	NEXT
+
+// PICK ( xu...x1 x0 u -- xu...x1 x0 xu ) 
+// Remove u. Copy the xu to the top of the stack. An ambiguous condition exists 
+// if there are less than u+2 items on the stack before PICK is executed. 
+defcode "PICK",,PICK
+	POPDSP	r0						@ r0 = u
+	ldr		r1, [DSP, r0, LSL #2]	@ r1 = xu
+	PUSHDSP	r1
+	NEXT
+
+// ?DUP ( x -- 0 | x x )
+// Duplicate x if it is non-zero. 
+defcode "?DUP",,QDUP
+	ldr		r0, [DSP]				@ r0 = x
+	cmp		r0, #0
+	strne 	r0, [DSP, #-4]!			@ if r0 != 0, push
+	NEXT
+
+// 1+ ( x -- x+1 )
+// Add one (1) to x giving the result x+1. 
+defcode "1+",,INCR
+	POPDSP	r0
+	add		r0, r0, #1
+	PUSHDSP	r0
+	NEXT
+
+// 1- ( x -- x-1 )
+// Subtract one (1) from x giving the result x-1.
+defcode "1-",,DECR
+	POPDSP	r0
+	sub 	r0, r0, #1
+	PUSHDSP	r0
+	NEXT
+
+// + ( x y -- x+y )
+// Add y to x, giving the sum y+x.
+defcode "+",,ADD
+	POPDSP	r0
+	POPDSP	r1
+	add 	r0, r0, r1
+	PUSHDSP	r0
+	NEXT
+
+// - ( x y -- x-y )
+// Subtract y from x, giving the difference y-x.
+defcode "-",,SUB
+	POPDSP	r0
+	POPDSP	r1
+	sub		r0, r1, r0
+	PUSHDSP	r0
+	NEXT
+
+// 2* ( x -- x*2 )
+// x*2 is the result of shifting x one bit toward the most-significant bit, 
+// filling the vacated least-significant bit with zero. 
+defcode "2*",,MUL2
+	POPDSP	r0
+	mov		r0, r0, LSL #1
+	PUSHDSP	r0
+	NEXT
+
+// 2/ ( x -- x/2 )
+// x/2 is the result of shifting x one bit toward the least-significant bit, 
+// leaving the most-significant bit unchanged. 
+defcode "2/",,DIV2
+	POPDSP	r0
+	mov		r0, r0, ASR #1
+	PUSHDSP	r0
+	NEXT
+
+// LSHIFT ( x u -- x<<u )
+// Perform a logical left shift of u bit-places on x, giving x<<u. Put zeroes into 
+// the least significant bits vacated by the shift. An ambiguous condition exists 
+// if u is greater than or equal to the number of bits in a cell.  
+defcode "LSHIFT",,LSHIFT
+	POPDSP	r0
+	POPDSP	r1
+	mov 	r0, r1, LSL r0
+	PUSHDSP	r0
+	NEXT
+
+// RSHIFT ( x u -- x>>u )
+// Perform a logical right shift of u bit-places on x, giving x>>u. Put zeroes into 
+// the most significant bits vacated by the shift. An ambiguous condition exists if 
+// u is greater than or equal to the number of bits in a cell.  
+defcode "RSHIFT",,RSHIFT
+	POPDSP	r0
+	POPDSP	r1
+	mov		r0, r1, LSR r0
 	PUSHDSP	r0
 	NEXT
 
