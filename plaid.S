@@ -165,6 +165,53 @@ defcode "EXIT",,EXIT
 	POPRSP	FIP
 	NEXT
 
+// DROP ( a -- ) drop the top element of the stack
+defcode "DROP",,DROP
+	add		DSP, DSP, #4
+	NEXT
+
+// DUP ( a -- a a ) duplicates the top element
+defcode "DUP",,DUP
+	ldr		r0, [DSP]
+	PUSHDSP r0
+	NEXT
+
+// SWAP ( a b -- b a ) swap the top two elements
+defcode "SWAP",,SWAP
+	POPDSP	r0
+	POPDSP	r1
+	PUSHDSP	r0
+	PUSHDSP r1
+	NEXT
+
+// OVER ( a b -- a b a ) push copy of second element to top
+defcode "OVER",,OVER
+	ldr		r0, [DSP, #4]
+	PUSHDSP	r0
+	NEXT
+
+// ROT ( a b c -- c a b ) rotate the top three stack entries
+defcode "ROT",,ROT
+	POPDSP	r1
+	POPDSP	r2
+	POPDSP	r0
+	PUSHDSP	r2
+	PUSHDSP r1
+	PUSHDSP r0
+	NEXT
+
+// 2DROP ( a b -- ) drop the top two elements on the stack
+defcode "2DROP",,2DROP
+	add		DSP, DSP, #8
+	NEXT
+
+// 2DUP ( a b -- a b a b ) duplicate the top two stack elements
+defcode "2DUP",,2DUP
+	ldmia	DSP, {r0,r1}
+	PUSHDSP	r1
+	PUSHDSP	r0
+	NEXT
+
 // QUIT ( -- ) first word executed
 defword "QUIT",,QUIT
 	.int	R0, RSPSTORE
