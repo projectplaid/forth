@@ -75,9 +75,9 @@ return_stack_top:
 buffer:
 	.space	BUFFER_SIZE
 
-	.set	F_IMMED, 0x80
-	.set	F_HIDDEN, 0x20
-	.set	F_LENMASK, 0x1f
+	.set	F_IMM, 0x80
+	.set	F_HID, 0x20
+	.set	F_LEN, 0x1f
 
 	.set	link, 0
 
@@ -125,6 +125,11 @@ code_\label :
 	ldr		r0, =var_\name			@ load address
 	PUSHDSP	r0						@ push address
 	NEXT
+	.data
+	.align 	2
+	.global var_\name
+var_\name :
+	.int	\initial
 	.endm
 
 	.macro defconst name, flags=0, label, value
@@ -133,6 +138,28 @@ code_\label :
 	PUSHDSP	r0
 	NEXT
 	.endm
+
+defconst "VERSION",,VERSION,1
+defconst "R0",,R0,return_stack_top
+defconst "F_IMMED",,F_IMMED,F_IMM
+defconst "F_HIDDEN",,F_HIDDEN,F_HID
+defconst "F_LENMASK",,F_LENMASK,F_LEN
+
+defvar "STATE",,STATE
+defvar "HERE",,HERE
+defvar "LATEST",,LATEST,name_EXECUTE
+defvar "S0",,S0
+defvar "BASE",,BASE,10
+
+defcode "FALSE",,FALSE
+	mov		r0, #0
+	PUSHDSP r0
+	NEXT
+
+defcode "TRUE",,TRUE
+	mvn		r0, #0
+	PUSHDSP r0
+	NEXT 
 
 defcode "EXIT",,EXIT
 	POPRSP	FIP
@@ -144,3 +171,10 @@ defword "QUIT",,QUIT
 	.int	S0, FETCH, DSPSTORE
 	.int	INTERPRET
 	.int	BRANCH, -8
+
+// EXECUTE ( xt -- ) jump to the address on the stack
+// THIS MUST BE THE LAST WORD DEFINED
+defcode "EXECUTE",,EXECUTE
+	POPDSP	r0
+	ldr		r1, [r0]
+	bx		r1
