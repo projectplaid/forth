@@ -640,6 +640,13 @@ defword "DSP!",,DSPSTORE
 	PUSHDSP	r0
 	NEXT
 
+// BRANCH ( -- )
+// Advance FIP by offset in next CODEWORD
+defword "BRANCH",,BRANCH
+	ldr		r1, [FIP]
+	add		FIP, FIP, r1
+	NEXT
+
 // QUIT ( -- ) first word executed
 defword "QUIT",,QUIT
 	.int	R0, RSPSTORE
