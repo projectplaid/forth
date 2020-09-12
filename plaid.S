@@ -555,6 +555,91 @@ defcode "@",,FETCH
 	PUSHDSP	r0
 	NEXT
 
+// +! ( x a-addr -- )
+// Add x to the single-cell number at a-addr.
+defcode "+!",,ADDSTORE
+	POPDSP	r0
+	POPDSP	r1
+	ldr		r2, [r0]
+	add		r2, r1
+	str		r2, [r0]
+	NEXT
+
+// C! ( char c-addr -- )
+// Store char at c-addr. When character size is smaller than cell 
+// size, only the number of low-order bits corresponding to character 
+// size are transferred. 
+defcode "C!",,STORECHAR
+	POPDSP	r0
+	POPDSP	r1
+	strb	r1, [r0]
+	NEXT
+
+// C@ ( c-addr -- char )
+// Fetch the character stored at c-addr. When the cell size is greater
+// than character size, the unused high-order bits are all zeroes. 
+defcode "C@",,FETCHCHAR
+	POPDSP	r1
+	ldrb	r0, [r1]
+	PUSHDSP	r0
+	NEXT
+
+// CMOVE ( c-addr1 c-addr2 u -- )
+// If u is greater than zero, copy u consecutive characters from the 
+// data space starting at c-addr1 to that starting at c-addr2, proceeding 
+// character-by-character from lower addresses to higher addresses. 
+defcode "CMOVE",,MOVECHAR
+	POPDSP	r0						@ length
+	POPDSP	r1						@ c-addr2 (dest)
+	POPDSP	r2						@ c-addr1 (source)
+	cmp		r2, r1					@ check for overlap
+	bge		2f
+	sub		r3, r0, #1				@ length--
+	add		r2, r3					@ end of c-addr1
+	add		r1, r3					@ end of c-addr2
+1:
+	cmp		r0, #0					@ while length > 0
+	ble		3f
+	ldrb	r3, [r2], #-1			@ 	read char from c-addr2
+	strb	r3, [r1], #-1			@	write at c-addr1
+	sub		r0, r0, #1				@ 	length--
+	bl		1b
+2:
+	cmp		r0, #0					@ while length > 0
+	ble		3f
+	ldrb	r3, [r2], #1			@	read char from c-addr2
+	strb	r3, [r1], #1			@	write at c-addr1
+	sub		r0, r0, #1				@	length--
+	b		2b
+3:
+	NEXT
+
+// RSP@ ( -- rsp )
+// Fetch the return stack pointer.
+defword "RSP@",,RSPFETCH
+	PUSHDSP	RSP
+	NEXT
+
+// RSP! ( r -- )
+// Set the return stack pointer.
+defword "RSP!",,RSPSTORE
+	POPDSP	RSP
+	NEXT
+
+// DSP@ ( -- dsp )
+// Fetch the data stack pointer.
+defword "DSP@",,DSPFETCH
+	mov		r0, DSP
+	PUSHDSP	r0
+	NEXT
+
+// DSP! ( d -- )
+// Set the data stack pointer.
+defword "DSP!",,DSPSTORE
+	mov		r0, DSP
+	PUSHDSP	r0
+	NEXT
+
 // QUIT ( -- ) first word executed
 defword "QUIT",,QUIT
 	.int	R0, RSPSTORE
