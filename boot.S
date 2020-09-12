@@ -1,4 +1,5 @@
     .extern forth
+	.extern uart_init
 	.section ".text.boot"
 	.global _start
 _start:
@@ -25,6 +26,9 @@ _start:
 2:	@ if we're still below __bss_end, loop
 	cmp		r4, r9
 	blo		1b
+
+	@ setup the UART
+	bl		uart_init
 	
 	@ start FORTH
 	bl		forth
