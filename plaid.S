@@ -405,6 +405,156 @@ defcode "RSHIFT",,RSHIFT
 	PUSHDSP	r0
 	NEXT
 
+// NEGATE ( x -- -x )
+// Negate x, giving its arithmetic inverse x.
+defcode "NEGATE",,NEGATE
+	POPDSP	r0
+	rsb		r0, r0, #0
+	PUSHDSP	r0
+	NEXT
+
+// = ( x y -- flag )
+// flag is true if and only if x is bit-for-bit the same as y. 
+defcode "=",,EQ
+	POPDSP	r0
+	POPDSP	r1
+	cmp		r1, r0
+	mvneq	r0, #0
+	movne	r0, #0
+	PUSHDSP	r0
+	NEXT
+
+// <> ( x y -- flag )
+// flag is true if and only if x is not bit-for-bit the same as y.
+defcode "<>",,NEQ
+	POPDSP	r0
+	POPDSP	r1
+	cmp		r1, r0
+	mvnne	r0, #0
+	moveq	r0, #0
+	PUSHDSP	r0
+	NEXT
+
+// > ( x y -- flag )
+// flag is true if and only if x is greater than y.
+defcode ">",,GT
+	POPDSP	r0
+	POPDSP	r1
+	cmp		r1, r0
+	mvngt	r0, #0
+	movle	r0, #0
+	PUSHDSP	r0
+	NEXT
+
+// < ( x y -- flag )
+// flag is true if and only if x is less than y.
+defcode "<",,LT
+	POPDSP	r0
+	POPDSP	r1
+	cmp		r1, r0
+	mvnlt	r0, #0
+	movge	r0, #0
+	PUSHDSP	r0
+	NEXT
+
+// 0= ( x -- flag )
+// flag is true if and only if x is equal to zero.
+defcode "0=",,ZEQ
+	POPDSP	r1
+	mov		r0, #0
+	cmp		r1, r0
+	mvneq	r0, #0
+	PUSHDSP	r0
+	NEXT
+
+// 0<> ( x -- flag )
+// flag is true if and only if x is not equal to zero. 
+defcode "0<>",,ZNE
+	POPDSP	r1
+	mov		r0, #0
+	cmp		r1, r0
+	mvnne	r0, #0
+	PUSHDSP	r0
+	NEXT
+
+// 0< ( x -- flag )
+// flag is true if and only if x is less than zero. 
+defcode "0<",,ZLT
+	POPDSP	r1
+	mov		r0, #0
+	cmp		r1, r0
+	mvnlt	r0, #0
+	PUSHDSP	r0
+	NEXT
+
+// 0> ( x -- flag )
+// flag is true if and only if x is greater than zero.
+defcode "0>",,ZGT
+	POPDSP	r1
+	mov		r0, #0
+	cmp		r1, r0
+	mvngt	r0, #0
+	PUSHDSP	r0
+	NEXT
+
+// AND ( x y -- x2 )
+// x2 is the bit-by-bit logical "and" of x with y. 
+defcode "AND",,AND
+	POPDSP	r0
+	POPDSP	r1
+	and		r0, r1, r0
+	PUSHDSP	r0
+	NEXT
+
+// OR ( x y -- x2 )
+// x2 is the bit-by-bit inclusive-or of x with xy. 
+defcode "OR",,OR
+	POPDSP	r0
+	POPDSP	r1
+	orr		r0, r1, r0
+	PUSHDSP	r0
+	NEXT
+
+// XOR ( x y -- x2 )
+// x2 is the bit-by-bit exclusive-or of x with y.
+defcode "XOR",,XOR
+	POPDSP	r0
+	POPDSP	r1
+	eor		r0, r1, r0
+	PUSHDSP	r0
+	NEXT
+
+// INVERT ( x -- x2 )
+// Invert all bits of x, giving its logical inverse x2. 
+defcode "INVERT",,INVERT
+	POPDSP	r0
+	mvn		r0, r0
+	PUSHDSP	r0
+	NEXT
+
+// LITERAL ( x -- ) 
+// Append the run-time semantics given below to the current definition. 
+defcode "LITERAL",,LITERAL
+	ldr		r1, [FIP], #4
+	PUSHDSP	r1
+	NEXT
+
+// ! ( x a-addr -- )
+// Store x at a-addr.
+defcode "!",,STORE
+	PUSHDSP	r0
+	PUSHDSP	r1
+	str		r1, [r0]
+	NEXT
+
+// @ ( a-addr -- x )
+// x is the value stored at a-addr.
+defcode "@",,FETCH
+	PUSHDSP	r1
+	ldr		r0, [r1]
+	PUSHDSP	r0
+	NEXT
+
 // QUIT ( -- ) first word executed
 defword "QUIT",,QUIT
 	.int	R0, RSPSTORE
