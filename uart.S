@@ -64,7 +64,7 @@
 
     .text
     .align  2
-    .globl  uart_init
+    .global uart_init
 uart_init:
     ldr     x1, =UARTBASE
     // set baud rate divisor
@@ -98,4 +98,28 @@ putlp:
     tst     x2, #UART_TXFF
     bne     putlp
     str     x0, [x1, #UART_DR]
+    ret
+
+    .text
+    .align  2
+    .global uart_getc
+uart_getc:
+    ldr     x1, =UARTBASE
+getlp:
+    ldr     x2, [x1, #UART_FR]
+    tst     x2, #UART_RXFE
+    bne     getlp
+    ldr     w0, [x1, #UART_DR]
+    tst     w0, #UART_OE
+    bne     get_ok1
+get_ok1:
+    tst     w0, #UART_BE
+    bne     get_ok2
+get_ok2:
+    tst     w0, #UART_PE
+    bne     get_ok3
+get_ok3:
+    tst     w0, #UART_FE
+    bne     get_ok4
+get_ok4:
     ret
