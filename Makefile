@@ -1,24 +1,25 @@
 .PHONY: all clean run
 
-ASMSRCS = boot.S plaid.S
+# plaid.S
+ASMSRCS = boot.S  uart.S
 ASMOBJS = $(ASMSRCS:.S=.o)
 
-CSRCS = uart.c
+CSRCS = 
 COBJS = $(CSRCS:.c=.o)
 
 CFLAGS=-mcpu=cortex-a53 -g -O0 -fpic -ffreestanding -std=gnu99 
 
-all: kernel7.img
+all: kernel8.img
 
 %.o: %.S
-	arm-none-eabi-gcc $(CFLAGS) -c -o $@ $<
+	aarch64-none-elf-gcc $(CFLAGS) -c -o $@ $<
 
 %.o: %.c
-	arm-none-eabi-gcc $(CFLAGS) -c -o $@ $<
+	aarch64-none-elf-gcc $(CFLAGS) -c -o $@ $<
 
-kernel7.img: $(ASMOBJS) $(COBJS)
-	arm-none-eabi-gcc -T linker.ld -o kernel7.elf -ffreestanding -O0 -g -nostdlib $(ASMOBJS) $(COBJS) -lgcc
-	arm-none-eabi-objcopy kernel7.elf -O binary kernel7.img
+kernel8.img: $(ASMOBJS) $(COBJS)
+	aarch64-none-elf-gcc -T linker.ld -o kernel8.elf -ffreestanding -O0 -g -nostdlib $(ASMOBJS) $(COBJS) -lgcc
+	aarch64-none-elf-objcopy kernel8.elf -O binary kernel8.img
 
 clean:
 	rm -f *.o *.elf *.img

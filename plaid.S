@@ -10,6 +10,7 @@ RSP	.req	r11
 FIP	.req	r10
 
 	.text
+	.code   32
 	.global forth
 forth:
 	wfe
